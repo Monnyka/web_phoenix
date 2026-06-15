@@ -1,0 +1,31 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap");
+@import "tailwindcss";
+@import "@heroui/styles";
+
+:root {
+  font-family: "Space Grotesk", sans-serif;
+  color: #0f172a;
+  background-color: #f8f4e8;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input {
+  font-family: inherit;
+}

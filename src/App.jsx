@@ -1,0 +1,52 @@
+import { Navigate, Route, Routes } from "react-router-dom";
+import "./App.css";
+import ProtectedRoute from "./components/ProtectedRoute";
+import DashboardPage from "./pages/DashboardPage";
+import LoginPage from "./pages/LoginPage";
+import ReportsPage from "./pages/ReportsPage";
+import ReservationsPage from "./pages/ReservationsPage";
+import SettingsPage from "./pages/SettingsPage";
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/reservations"
+        element={
+          <ProtectedRoute>
+            <ReservationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/reports"
+        element={
+          <ProtectedRoute>
+            <ReportsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  );
+}
+
+export default App;
