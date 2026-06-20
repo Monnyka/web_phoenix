@@ -30,6 +30,8 @@ function DashboardPage() {
   const [newGuestForm, setNewGuestForm] = useState({
     guestName: "",
     guestLocation: "",
+    amount: "",
+    currency: "USD",
     completed: "open",
   });
 
@@ -196,6 +198,8 @@ function DashboardPage() {
       setNewGuestForm({
         guestName: "",
         guestLocation: "",
+        amount: "",
+        currency: "USD",
         completed: "open",
       });
       toast.success("Monetary contribution added successfully.");
@@ -312,11 +316,27 @@ function DashboardPage() {
 
                       return (
                         <tr key={key}>
-                          <td>{guest.guestName || "Unnamed Guest"}</td>
+                          <td>
+                            <span
+                              className={
+                                guest.status === "closed"
+                                  ? "guest-name guest-name--closed"
+                                  : "guest-name"
+                              }
+                            >
+                              {guest.guestName || "Unnamed Guest"}
+                            </span>
+                          </td>
                           <td>{guest.guestLocation || "-"}</td>
                           <td>{formatAmount(guest.amount)}</td>
                           <td>
-                            <span className="status-chip">
+                            <span
+                              className={
+                                guest.status === "closed"
+                                  ? "status-chip status-chip--closed"
+                                  : "status-chip"
+                              }
+                            >
                               {guest.status || "-"}
                             </span>
                           </td>
@@ -557,6 +577,42 @@ function DashboardPage() {
                   required
                 />
               </label>
+
+              <div className="create-form-row">
+                <label className="create-form-grow">
+                  <span className="guest-search-label">Amount</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newGuestForm.amount}
+                    onChange={(event) =>
+                      setNewGuestForm((currentForm) => ({
+                        ...currentForm,
+                        amount: event.target.value,
+                      }))
+                    }
+                    placeholder="0.00"
+                    required
+                  />
+                </label>
+
+                <label>
+                  <span className="guest-search-label">Currency</span>
+                  <select
+                    value={newGuestForm.currency}
+                    onChange={(event) =>
+                      setNewGuestForm((currentForm) => ({
+                        ...currentForm,
+                        currency: event.target.value,
+                      }))
+                    }
+                  >
+                    <option value="USD">USD</option>
+                    <option value="KHR">KHR</option>
+                  </select>
+                </label>
+              </div>
 
               <label>
                 <span className="guest-search-label">Status</span>

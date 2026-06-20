@@ -409,6 +409,16 @@
   text-transform: capitalize;
 }
 
+.status-chip--closed {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
+
+.guest-name--closed {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
 .guest-actions {
   position: relative;
   display: flex;
@@ -493,6 +503,17 @@
 .create-form {
   display: grid;
   gap: 12px;
+}
+
+.create-form-row {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 10px;
+  align-items: end;
+}
+
+.create-form-grow {
+  min-width: 0;
 }
 
 .create-form input,
