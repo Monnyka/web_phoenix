@@ -1,4 +1,10 @@
-const GUESTS_API_BASE = "https://api-dev-phoenix.monnykapin.com/api/v1/guests";
+const API_BASE_URL = (
+  import.meta.env.BASE_API_URL ||
+  import.meta.env.VITE_BASE_API_URL ||
+  "https://api-dev-phoenix.monnykapin.com/api/v1"
+).replace(/\/$/, "");
+
+const GUESTS_API_BASE = `${API_BASE_URL}/guests`;
 
 function normalizeGuestsResponse(payload) {
   if (Array.isArray(payload)) {
