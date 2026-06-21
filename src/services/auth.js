@@ -15,7 +15,8 @@ export async function loginRequest(email, password) {
     import.meta.env.VITE_BASE_API_URL ||
     ""
   ).replace(/\/$/, "");
-  const endpoint = import.meta.env.VITE_LOGIN_URL ||
+  const endpoint =
+    import.meta.env.VITE_LOGIN_URL ||
     (apiBaseUrl ? `${apiBaseUrl}/auth/login` : "");
 
   if (endpoint) {
