@@ -2,7 +2,7 @@ services:
   app:
     env_file:
       - .env
-    image: ${GHCR_IMAGE:-ghcr.io/your-username/web-phoenix:latest}
+    image: ${GHCR_IMAGE:-ghcr.io/monnyka/web-phoenix:latest}
     pull_policy: always
     ports:
       - "8080:80"

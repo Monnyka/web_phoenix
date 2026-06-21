@@ -55,7 +55,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
-          labels: latest,${{ steps.meta.outputs.labels }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             BASE_API_URL=https://api-dev-phoenix.monnykapin.com/api/v1
             VITE_LOGIN_URL=
