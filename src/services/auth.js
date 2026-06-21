@@ -10,7 +10,13 @@ const SAMPLE_LOGIN_RESPONSE = {
 
 export async function loginRequest(email, password) {
   const payload = { email, password };
-  const endpoint = import.meta.env.VITE_LOGIN_URL;
+  const apiBaseUrl = (
+    import.meta.env.BASE_API_URL ||
+    import.meta.env.VITE_BASE_API_URL ||
+    ""
+  ).replace(/\/$/, "");
+  const endpoint = import.meta.env.VITE_LOGIN_URL ||
+    (apiBaseUrl ? `${apiBaseUrl}/auth/login` : "");
 
   if (endpoint) {
     const response = await fetch(endpoint, {
