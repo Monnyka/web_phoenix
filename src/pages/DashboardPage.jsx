@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "../lib/toast";
 import DashboardLayout from "../components/DashboardLayout";
 import { getAccessToken, getStoredUser } from "../services/auth";
@@ -12,6 +13,8 @@ import {
 function DashboardPage() {
   const pageSize = 25;
   const actionAreaRef = useRef(null);
+  const popupMenuRef = useRef(null);
+  const [popupMenuStyle, setPopupMenuStyle] = useState({});
   const user = useMemo(() => getStoredUser(), []);
   const [guests, setGuests] = useState([]);
   const [loadingGuests, setLoadingGuests] = useState(true);
@@ -73,11 +76,15 @@ function DashboardPage() {
 
   useEffect(() => {
     if (!openMenuId) {
+      setPopupMenuStyle({});
       return undefined;
     }
 
     const handlePointerDown = (event) => {
-      if (!actionAreaRef.current?.contains(event.target)) {
+      if (
+        !actionAreaRef.current?.contains(event.target) &&
+        !popupMenuRef.current?.contains(event.target)
+      ) {
         setOpenMenuId("");
       }
     };
@@ -212,11 +219,15 @@ function DashboardPage() {
     }
   };
 
-  const formatAmount = (amount) => {
+  const formatAmount = (amount, currency = "USD") => {
     const numericAmount = Number(amount);
 
     if (Number.isNaN(numericAmount)) {
       return amount || "-";
+    }
+
+    if (currency === "KHR") {
+      return `៛${numericAmount.toLocaleString("en-US")}`;
     }
 
     return new Intl.NumberFormat("en-US", {
@@ -328,7 +339,7 @@ function DashboardPage() {
                             </span>
                           </td>
                           <td>{guest.guestLocation || "-"}</td>
-                          <td>{formatAmount(guest.amount)}</td>
+                          <td>{formatAmount(guest.amount, guest.currency)}</td>
                           <td>
                             <span
                               className={
@@ -345,79 +356,102 @@ function DashboardPage() {
                               ? new Date(guest.createdAt).toLocaleString()
                               : "-"}
                           </td>
-                          <td>
-                            <div
-                              className="guest-actions"
-                              ref={isMenuOpen ? actionAreaRef : null}
-                            >
-                              <button
-                                type="button"
-                                className="guest-menu-trigger"
-                                aria-label="Open guest actions"
-                                aria-expanded={isMenuOpen}
-                                disabled={
-                                  updatingGuestId === key ||
-                                  deletingGuestId === key
-                                }
-                                onClick={() =>
-                                  setOpenMenuId(isMenuOpen ? "" : key)
-                                }
+                            <td>
+                              <div
+                                className="guest-actions"
+                                ref={isMenuOpen ? actionAreaRef : null}
                               >
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                              </button>
+                                <button
+                                  type="button"
+                                  className="guest-menu-trigger"
+                                  aria-label="Open guest actions"
+                                  aria-expanded={isMenuOpen}
+                                  disabled={
+                                    updatingGuestId === key ||
+                                    deletingGuestId === key
+                                  }
+                                onClick={(event) => {
+                                  if (isMenuOpen) {
+                                    setOpenMenuId("");
+                                    return;
+                                  }
+                                  const rect =
+                                    event.currentTarget.getBoundingClientRect();
+                                  setPopupMenuStyle({
+                                    position: "fixed",
+                                    top: rect.bottom + 8,
+                                    right: window.innerWidth - rect.right,
+                                  });
+                                  setOpenMenuId(key);
+                                }}
+                                >
+                                  <span></span>
+                                  <span></span>
+                                  <span></span>
+                                </button>
 
-                              {isMenuOpen ? (
-                                <div className="guest-menu">
-                                  <button
-                                    type="button"
-                                    className="guest-menu-item"
-                                    disabled={
-                                      updatingGuestId === key ||
-                                      deletingGuestId === key
-                                    }
-                                    onClick={() =>
-                                      setConfirmAction({
-                                        actionType: "status",
-                                        guestId: key,
-                                        guestName:
-                                          guest.guestName || "this guest",
-                                        nextStatus,
-                                        menuLabel,
-                                      })
-                                    }
-                                  >
-                                    {updatingGuestId === key
-                                      ? "Updating..."
-                                      : menuLabel}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="guest-menu-item"
-                                    disabled={
-                                      updatingGuestId === key ||
-                                      deletingGuestId === key
-                                    }
-                                    onClick={() =>
-                                      setConfirmAction({
-                                        actionType: "delete",
-                                        guestId: key,
-                                        guestName:
-                                          guest.guestName ||
-                                          "this contribution",
-                                        menuLabel: "Delete",
-                                      })
-                                    }
-                                  >
-                                    {deletingGuestId === key
-                                      ? "Deleting..."
-                                      : "Delete"}
-                                  </button>
-                                </div>
-                              ) : null}
-                            </div>
-                          </td>
+                                {isMenuOpen
+                                  ? createPortal(
+                                      <div
+                                        className="guest-menu guest-menu--popup"
+                                        ref={popupMenuRef}
+                                        style={popupMenuStyle}
+                                        role="dialog"
+                                        aria-modal="true"
+                                        aria-label="Guest actions"
+                                      >
+                                        <button
+                                          type="button"
+                                          className="guest-menu-item"
+                                          disabled={
+                                            updatingGuestId === key ||
+                                            deletingGuestId === key
+                                          }
+                                          onClick={() => {
+                                            setConfirmAction({
+                                              actionType: "status",
+                                              guestId: key,
+                                              guestName:
+                                                guest.guestName || "this guest",
+                                              nextStatus,
+                                              menuLabel,
+                                            });
+                                            setOpenMenuId("");
+                                          }}
+                                        >
+                                          {updatingGuestId === key
+                                            ? "Updating..."
+                                            : menuLabel}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="guest-menu-item"
+                                          disabled={
+                                            updatingGuestId === key ||
+                                            deletingGuestId === key
+                                          }
+                                          onClick={() => {
+                                            setConfirmAction({
+                                              actionType: "delete",
+                                              guestId: key,
+                                              guestName:
+                                                guest.guestName ||
+                                                "this contribution",
+                                              menuLabel: "Delete",
+                                            });
+                                            setOpenMenuId("");
+                                          }}
+                                        >
+                                          {deletingGuestId === key
+                                            ? "Deleting..."
+                                            : "Delete"}
+                                        </button>
+                                      </div>,
+                                      document.body,
+                                    )
+                                  : null}
+                              </div>
+                            </td>
                         </tr>
                       );
                     })}

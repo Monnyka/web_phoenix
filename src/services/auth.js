@@ -1,45 +1,18 @@
-const SAMPLE_LOGIN_RESPONSE = {
-  user: {
-    name: "test",
-  },
-  accessToken:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YTMwMTM2NDdiYjQ2YTM3MmY2NWM0NjYiLCJuYW1lIjoidGVzdCIsImlhdCI6MTc4MTUzNjcyMCwiZXhwIjoxNzg0MTI4NzIwfQ.KtX8P6yEtS6zCsprmBPxH3W1NrA-zO3EkJrwcg__SYM",
-  refreshToken:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YTMwMTM2NDdiYjQ2YTM3MmY2NWM0NjYiLCJuYW1lIjoidGVzdCIsImlhdCI6MTc4MTUzNjcyMCwiZXhwIjoxNzgyMTQxNTIwfQ.4ykdbeAZhDfdTAfLfmMvfApjtTAdbtIcUmlUouarQm8",
-};
+const API_BASE_URL = import.meta.env.BASE_API_URL || "";
+const LOGIN_URL = `${API_BASE_URL.replace(/\/$/, "")}/auth/login`;
 
 export async function loginRequest(email, password) {
-  const payload = { email, password };
-  const apiBaseUrl = (
-    import.meta.env.BASE_API_URL ||
-    import.meta.env.VITE_BASE_API_URL ||
-    ""
-  ).replace(/\/$/, "");
-  const endpoint =
-    import.meta.env.VITE_LOGIN_URL ||
-    (apiBaseUrl ? `${apiBaseUrl}/auth/login` : "");
+  const response = await fetch(LOGIN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
 
-  if (endpoint) {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error("Login failed. Please verify your credentials.");
-    }
-
-    return response.json();
+  if (!response.ok) {
+    throw new Error("Login failed. Please verify your credentials.");
   }
 
-  if (email === "test@gmail.com" && password === "123456") {
-    return SAMPLE_LOGIN_RESPONSE;
-  }
-
-  throw new Error("Invalid email or password.");
+  return response.json();
 }
 
 export function saveAuthSession(data) {
