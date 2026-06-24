@@ -3,6 +3,8 @@ FROM node:lts-alpine AS builder
 
 WORKDIR /app
 
+ENV BASE_API_URL=$BASE_API_URL
+
 # Install dependencies first (cached unless package*.json changes)
 COPY package*.json ./
 RUN npm ci --prefer-offline
