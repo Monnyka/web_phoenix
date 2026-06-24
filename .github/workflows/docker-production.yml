@@ -57,8 +57,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            BASE_API_URL=https://api-dev-phoenix.monnykapin.com/api/v1
-            VITE_LOGIN_URL=
+            BASE_API_URL=https://api-prod-phoenix.monnykapin.com/api/v1
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
