@@ -8,14 +8,19 @@ ARG VITE_LOGIN_URL=""
 ENV BASE_API_URL=$BASE_API_URL
 ENV VITE_LOGIN_URL=$VITE_LOGIN_URL
 
+# Install dependencies first (cached unless package*.json changes)
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --prefer-offline
 
+# Copy source and build
 COPY . .
 RUN npm run build
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine AS runner
+
+# Remove default nginx static files
+RUN rm -rf /usr/share/nginx/html/*
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
