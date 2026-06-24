@@ -3,10 +3,8 @@ FROM node:lts-alpine AS builder
 
 WORKDIR /app
 
-ARG BASE_API_URL="https://api-dev-phoenix.monnykapin.com/api/v1"
-ARG VITE_LOGIN_URL=""
+ARG BASE_API_URL
 ENV BASE_API_URL=$BASE_API_URL
-ENV VITE_LOGIN_URL=$VITE_LOGIN_URL
 
 # Install dependencies first (cached unless package*.json changes)
 COPY package*.json ./
