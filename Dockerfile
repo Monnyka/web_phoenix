@@ -3,6 +3,7 @@ FROM node:lts-alpine AS builder
 
 WORKDIR /app
 
+ARG BASE_API_URL="https://api-dev-phoenix.monnykapin.com/api/v1"
 ENV BASE_API_URL=$BASE_API_URL
 
 # Install dependencies first (cached unless package*.json changes)
