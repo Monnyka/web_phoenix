@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.BASE_API_URL || "";
+const API_BASE_URL =
+  import.meta.env.BASE_API_URL || window.__ENV__?.BASE_API_URL || "";
 const LOGIN_URL = `${API_BASE_URL.replace(/\/$/, "")}/auth/login`;
 
 export async function loginRequest(email, password) {

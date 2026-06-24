@@ -27,6 +27,9 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Handle client-side routing (React Router)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Runtime env injection script
+COPY env.sh /docker-entrypoint.d/40-env.sh
+
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
