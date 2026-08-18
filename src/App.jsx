@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import ReportsPage from "./pages/ReportsPage";
+import RentalsPage from "./pages/RentalsPage";
 import ReservationsPage from "./pages/ReservationsPage";
 import SettingsPage from "./pages/SettingsPage";
 
@@ -17,6 +18,14 @@ function App() {
         element={
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/rentals"
+        element={
+          <ProtectedRoute>
+            <RentalsPage />
           </ProtectedRoute>
         }
       />
