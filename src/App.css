@@ -363,6 +363,27 @@
   min-width: 180px;
 }
 
+.rental-filters {
+  grid-template-columns: minmax(240px, 1fr) 180px 180px auto;
+}
+
+.rental-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rental-add-menu {
+  position: relative;
+}
+
+.guest-menu--add {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 100;
+}
+
 .guest-table-wrap {
   position: relative;
   isolation: isolate;
@@ -417,6 +438,21 @@
 .status-chip--incoming {
   background: rgba(37, 99, 235, 0.12);
   color: #2563eb;
+}
+
+.status-chip--paid {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+
+.status-chip--pending {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+}
+
+.status-chip--overdue {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
 }
 
 .guest-name--settled {
@@ -512,6 +548,10 @@
   grid-template-columns: 1fr 120px;
   gap: 10px;
   align-items: end;
+}
+
+.create-form-row--three {
+  grid-template-columns: 1fr 120px 120px;
 }
 
 .create-form-grow {
@@ -639,6 +679,55 @@
   color: #475569;
 }
 
+.rental-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.rental-stat-card {
+  padding: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.rental-stat-value {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f766e;
+}
+
+.rental-stat-label {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.clear-filter-btn {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font: inherit;
+  font-weight: 700;
+  color: #0f172a;
+  background: #ffffff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.clear-filter-btn:hover {
+  background: #f8fafc;
+}
+
+.guest-table--rentals {
+  min-width: 900px;
+}
+
 @media (max-width: 900px) {
   .login-page {
     grid-template-columns: 1fr;
@@ -687,6 +776,10 @@
   .guest-filters {
     grid-template-columns: 1fr;
     align-items: stretch;
+  }
+
+  .rental-stats {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .guest-search {

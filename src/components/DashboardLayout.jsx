@@ -4,6 +4,7 @@ import { clearAuthSession, getStoredUser } from "../services/auth";
 
 const menuItems = [
   { label: "Monetary Contribution", path: "/dashboard" },
+  { label: "Rental Rooms", path: "/dashboard/rentals" },
   { label: "Reservations", path: "/dashboard/reservations" },
   { label: "Reports", path: "/dashboard/reports" },
   { label: "Settings", path: "/dashboard/settings" },
