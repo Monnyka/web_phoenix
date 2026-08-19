@@ -1,0 +1,63 @@
+# System Patterns
+
+## Architecture
+Single-page React app (no SSR). Front-end only; talks to a separate Express REST API via `fetch`.
+
+```
+Browser → React Router → Pages → Services (fetch + JWT) → Express API
+```
+
+## Directory Structure
+```
+src/
+  assets/         Static images
+  components/     Shared UI (DashboardLayout, ProtectedRoute, LoginForm, HeroPanel)
+  lib/            Utilities (toast queue)
+  pages/          Route-level pages (LoginPage, DashboardPage, RentalsPage, …)
+  services/       API client functions (auth.js, guests.js, rentals.js)
+  App.jsx         Route definitions
+  main.jsx        App entry point (StrictMode + BrowserRouter + HeroUI Toast)
+```
+
+## Key Patterns
+
+### 1. Protected Routing
+`ProtectedRoute` wraps dashboard pages and checks `hasAccessToken()` (localStorage). Redirects to `/login` if absent. NOTE: it only checks that a token exists, not that it's valid — a stale token passes the check but API calls then 401.
+
+### 2. Services Layer (fetch + Bearer token)
+Each service builds the API base from env and attaches `Authorization: Bearer <token>`.
+- `authHeaders(accessToken)` helper shared pattern across `guests.js` and `rentals.js`.
+- `normalize*` helpers unwrap common response shapes (`data`, `guests`, `rentals`, `rental`).
+- List endpoints normalize `payload.rentals || payload.data || payload` and return `{ items, total, limit, offset, ... }`.
+
+### 3. Pages: "List Management" pattern
+Used by both `DashboardPage` (guests) and `RentalsPage`. Each implements:
+- **State**: `data` array, `total`, `loading`, `error`, `searchTerm`, filters, `page`, open popup menu id, confirm action, busy ids, and create/edit modal state + forms.
+- **Effects**: a `useEffect` keyed on `[page, filters]` that fetches with an `active` flag for cleanup.
+- **Memorized filtering**: `useMemo` for search-filtered rows.
+- **Table**: sticky-header `<table>` inside a scrollable `.guest-table-wrap`.
+- **Row actions**: a 3-dot `guest-menu-trigger` opening a portal-based popup menu (`guest-menu`) positioned near the button, with an outside-click handler.
+- **Modals**: `confirm-overlay` + `confirm-dialog` for confirm; `create-dialog` for create/edit forms.
+- **Toasts**: `toast.success/danger/info` from `src/lib/toast.js` (custom HeroUI queue).
+
+### 4. Empty / Error / Loading states
+Render conditional paragraphs: `Loading...`, `No records found.`, `No records match your filters.`, or `form-error` message.
+
+### 5. Stats strip (Rentals only)
+`statCards` = ordered array of `{ key, label, type }` filtered against the `stats` object from the API. `type: "amount"` renders currency, `type: "count"` renders a number.
+
+## Component Relationships
+- `main.jsx` → `<App/>` (Routes)
+- `App.jsx` → `DashboardLayout` (via each page) + `ProtectedRoute` wrapper
+- `DashboardLayout` renders navbar/sidebar/footer and `{children}` = the page content
+- Pages import service functions and render modals via `createPortal` for the row-action menus
+
+## Critical Implementation Paths
+1. **Login**: `LoginForm` → `loginRequest` (POST `/auth/login`) → `saveAuthSession` stores `accessToken`, `refreshToken`, `user` in localStorage.
+2. **Load rental list**: `RentalsPage` effect → `fetchRentals` (GET `/rentals?...status=&month=&offset=&limit=`) → set state → render.
+3. **Record payment**: row menu → confirm → `recordRentalPayment` (POST `/:id/payments`) → set row status to `paid`.
+4. **Refresh status**: row menu → `fetchRentalStatus` (GET `/:id/status`) → update row `paymentStatus`.
+5. **Update**: edit modal → `updateRental` (PUT `/:id`) → replace row.
+
+## Important Note on Data Shapes
+`roomId`, `tenantId`, and potentially `createdBy` can be returned as **populated objects** (e.g. `{ _id, number }`) or `null`. Never render these directly as React children — always pass through `formatReference()` (renders `number || name || title || code || _id`).
