@@ -91,6 +91,24 @@ export async function fetchRentalStatus(accessToken, rentalId) {
   return payload?.status ?? payload?.paymentStatus ?? payload?.data ?? payload;
 }
 
+export async function updateRentalStatus(accessToken, rentalId, status) {
+  const response = await fetch(`${RENTALS_API_BASE}/${rentalId}/status`, {
+    method: "PUT",
+    headers: {
+      ...authHeaders(accessToken),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to update rental status.");
+  }
+
+  const payload = await response.json();
+  return payload?.rental || payload?.data || payload;
+}
+
 export async function createRental(accessToken, rentalData) {
   const response = await fetch(RENTALS_API_BASE, {
     method: "POST",

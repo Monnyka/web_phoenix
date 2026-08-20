@@ -10,10 +10,17 @@ import {
   fetchRentals,
   recordRentalPayment,
   updateRental,
+  updateRentalStatus,
 } from "../services/rentals";
 import { createRoom, fetchRooms } from "../services/rooms";
 
 const STATUS_VALUES = ["all", "paid", "pending", "overdue"];
+
+const MANUAL_STATUS_VALUES = [
+  { value: "pending", label: "Pending" },
+  { value: "unpaid", label: "Unpaid" },
+  { value: "paid", label: "Paid" },
+];
 
 const STAT_ROWS = [
   [
@@ -35,6 +42,7 @@ function formatStatus(status) {
   const labels = {
     paid: "Paid",
     pending: "Pending",
+    unpaid: "Unpaid",
     overdue: "Overdue",
     active: "Active",
     vacant: "Vacant",
@@ -49,6 +57,7 @@ function formatStatus(status) {
 function statusChipClass(status) {
   if (status === "paid") return "status-chip status-chip--paid";
   if (status === "pending") return "status-chip status-chip--pending";
+  if (status === "unpaid") return "status-chip status-chip--unpaid";
   if (status === "overdue") return "status-chip status-chip--overdue";
   return "status-chip";
 }
@@ -98,6 +107,35 @@ function toDateInputValue(value) {
   return date.toISOString().slice(0, 10);
 }
 
+// Extract the day-of-month (01-31) from a dueDate, safe against timezone
+// shifts for "YYYY-MM-DD" strings (parsed as UTC).
+function extractDayPart(value) {
+  if (!value) return "";
+  if (typeof value === "string") {
+    const match = value.match(/^\d{4}-\d{2}-(\d{2})/);
+    if (match) return match[1];
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return String(date.getDate()).padStart(2, "0");
+}
+
+// Build the payment date "YYYY-MM-DD": year/month come from the active month
+// filter (or the current month when no filter is set); the day comes from the
+// rental's dueDate, falling back to today.
+function getPaymentDate(monthFilter, rental) {
+  const now = new Date();
+  const year = monthFilter
+    ? monthFilter.slice(0, 4)
+    : String(now.getFullYear());
+  const month = monthFilter
+    ? monthFilter.slice(5, 7)
+    : String(now.getMonth() + 1).padStart(2, "0");
+  const day =
+    extractDayPart(rental?.dueDate) || String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 const EMPTY_FORM = {
   roomId: "",
   roomNumber: "",
@@ -127,6 +165,11 @@ function RentalsPage() {
   const [openMenuId, setOpenMenuId] = useState("");
   const [confirmAction, setConfirmAction] = useState(null);
   const [busyId, setBusyId] = useState("");
+
+  const statusMenuRef = useRef(null);
+  const statusAreaRef = useRef(null);
+  const [statusMenuId, setStatusMenuId] = useState("");
+  const [statusMenuStyle, setStatusMenuStyle] = useState({});
 
   const [stats, setStats] = useState(null);
 
@@ -219,6 +262,29 @@ function RentalsPage() {
       document.removeEventListener("touchstart", handlePointerDown);
     };
   }, [openMenuId]);
+
+  useEffect(() => {
+    if (!statusMenuId) {
+      return undefined;
+    }
+
+    const handleStatusMenuPointerDown = (event) => {
+      if (
+        !statusAreaRef.current?.contains(event.target) &&
+        !statusMenuRef.current?.contains(event.target)
+      ) {
+        setStatusMenuId("");
+      }
+    };
+
+    document.addEventListener("mousedown", handleStatusMenuPointerDown);
+    document.addEventListener("touchstart", handleStatusMenuPointerDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handleStatusMenuPointerDown);
+      document.removeEventListener("touchstart", handleStatusMenuPointerDown);
+    };
+  }, [statusMenuId]);
 
   useEffect(() => {
     let active = true;
@@ -473,6 +539,73 @@ function RentalsPage() {
     }
   };
 
+  const handleUpdateStatus = async (rentalId, status) => {
+    setBusyId(rentalId);
+    setRentalsError("");
+
+    try {
+      const accessToken = getAccessToken();
+      const rental = rentals.find(
+        (item) => (item._id || item.id) === rentalId,
+      );
+
+      // Selecting "Paid" records an actual payment instead of just flipping
+      // the status: POST /rentals/:id/payments with { amount, paymentDate }.
+      // paymentDate's year/month come from the active month filter (or the
+      // current month), and the day comes from the rental's dueDate (or today).
+      if (status === "paid") {
+        const amount = Number(rental?.rentAmount);
+        const paymentData = {
+          paymentDate: getPaymentDate(monthFilter, rental),
+        };
+        if (Number.isFinite(amount)) {
+          paymentData.amount = amount;
+        }
+
+        const updatedRental = await recordRentalPayment(
+          accessToken,
+          rentalId,
+          paymentData,
+        );
+
+        setRentals((currentRentals) =>
+          currentRentals.map((item) =>
+            (item._id || item.id) === rentalId
+              ? { ...item, ...updatedRental, paymentStatus: "paid" }
+              : item,
+          ),
+        );
+
+        toast.success("Payment recorded successfully.");
+        return;
+      }
+
+      const updatedRental = await updateRentalStatus(
+        accessToken,
+        rentalId,
+        status,
+      );
+      const mergedRental =
+        updatedRental && typeof updatedRental === "object"
+          ? updatedRental
+          : { status, paymentStatus: status };
+
+      setRentals((currentRentals) =>
+        currentRentals.map((item) =>
+          (item._id || item.id) === rentalId
+            ? { ...item, ...mergedRental, status, paymentStatus: status }
+            : item,
+        ),
+      );
+
+      toast.success("Rental status updated.");
+    } catch (error) {
+      setRentalsError(error.message || "Unable to update rental status.");
+    } finally {
+      setBusyId("");
+    }
+  };
+
   const handleDeleteRental = async (rentalId) => {
     setBusyId(rentalId);
     setRentalsError("");
@@ -658,11 +791,11 @@ function RentalsPage() {
                   <thead>
                     <tr>
                       <th>Room</th>
-                      <th>Tenant</th>
                       <th>Move In</th>
                       <th>Move Out</th>
                       <th>Rent</th>
                       <th>Due Date</th>
+                      <th>Payment Date</th>
                       <th>Status</th>
                       <th>Actions</th>
                     </tr>
@@ -671,6 +804,7 @@ function RentalsPage() {
                     {filteredRentals.map((rental, index) => {
                       const key = rental._id || rental.id || index;
                       const isMenuOpen = openMenuId === key;
+                      const isStatusMenuOpen = statusMenuId === key;
                       const isBusy = busyId === key;
                       const displayName =
                         formatReference(rental.roomId) ||
@@ -684,15 +818,71 @@ function RentalsPage() {
                               {formatReference(rental.roomId) || "-"}
                             </span>
                           </td>
-                          <td>{formatReference(rental.tenantId) || "-"}</td>
                           <td>{formatDate(rental.moveInDate)}</td>
                           <td>{formatDate(rental.moveOutDate)}</td>
                           <td>{formatAmount(rental.rentAmount)}</td>
                           <td>{formatDate(rental.dueDate)}</td>
+                          <td>{formatDate(rental.paymentDate)}</td>
                           <td>
-                            <span className={statusChipClass(rental.paymentStatus)}>
-                              {formatStatus(rental.paymentStatus)}
-                            </span>
+                            <div
+                              className="guest-actions"
+                              ref={isStatusMenuOpen ? statusAreaRef : null}
+                            >
+                              <button
+                                type="button"
+                                className={`${statusChipClass(
+                                  rental.paymentStatus,
+                                )} status-chip-btn`}
+                                aria-label="Change rental status"
+                                aria-expanded={isStatusMenuOpen}
+                                disabled={isBusy}
+                                onClick={(event) => {
+                                  if (isStatusMenuOpen) {
+                                    setStatusMenuId("");
+                                    return;
+                                  }
+                                  const rect =
+                                    event.currentTarget.getBoundingClientRect();
+                                  setStatusMenuStyle({
+                                    position: "fixed",
+                                    top: rect.bottom + 8,
+                                    right: window.innerWidth - rect.right,
+                                  });
+                                  setStatusMenuId(key);
+                                }}
+                              >
+                                {formatStatus(rental.paymentStatus)}
+                              </button>
+
+                              {isStatusMenuOpen
+                                ? createPortal(
+                                    <div
+                                      className="guest-menu guest-menu--popup"
+                                      ref={statusMenuRef}
+                                      style={statusMenuStyle}
+                                      role="dialog"
+                                      aria-modal="true"
+                                      aria-label="Change rental status"
+                                    >
+                                      {MANUAL_STATUS_VALUES.map((option) => (
+                                        <button
+                                          key={option.value}
+                                          type="button"
+                                          className="guest-menu-item"
+                                          disabled={isBusy}
+                                          onClick={() => {
+                                            setStatusMenuId("");
+                                            handleUpdateStatus(key, option.value);
+                                          }}
+                                        >
+                                          {option.label}
+                                        </button>
+                                      ))}
+                                    </div>,
+                                    document.body,
+                                  )
+                                : null}
+                            </div>
                           </td>
                           <td>
                             <div
