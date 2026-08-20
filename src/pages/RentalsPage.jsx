@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "../lib/toast";
+import { useMenuInViewport } from "../lib/popupMenu";
 import DashboardLayout from "../components/DashboardLayout";
 import { getAccessToken } from "../services/auth";
 import {
@@ -150,7 +151,6 @@ function RentalsPage() {
   const pageSize = 10;
   const actionAreaRef = useRef(null);
   const popupMenuRef = useRef(null);
-  const [popupMenuStyle, setPopupMenuStyle] = useState({});
 
   const [rentals, setRentals] = useState([]);
   const [total, setTotal] = useState(0);
@@ -163,13 +163,14 @@ function RentalsPage() {
   const [page, setPage] = useState(1);
 
   const [openMenuId, setOpenMenuId] = useState("");
+  useMenuInViewport(popupMenuRef, actionAreaRef, Boolean(openMenuId));
   const [confirmAction, setConfirmAction] = useState(null);
   const [busyId, setBusyId] = useState("");
 
   const statusMenuRef = useRef(null);
   const statusAreaRef = useRef(null);
   const [statusMenuId, setStatusMenuId] = useState("");
-  const [statusMenuStyle, setStatusMenuStyle] = useState({});
+  useMenuInViewport(statusMenuRef, statusAreaRef, Boolean(statusMenuId));
 
   const [stats, setStats] = useState(null);
 
@@ -240,10 +241,7 @@ function RentalsPage() {
   }, [page, statusFilter, monthFilter]);
 
   useEffect(() => {
-    if (!openMenuId) {
-      setPopupMenuStyle({});
-      return undefined;
-    }
+    if (!openMenuId) return undefined;
 
     const handlePointerDown = (event) => {
       if (
@@ -824,11 +822,9 @@ function RentalsPage() {
                           <td>{formatDate(rental.dueDate)}</td>
                           <td>{formatDate(rental.paymentDate)}</td>
                           <td>
-                            <div
-                              className="guest-actions"
-                              ref={isStatusMenuOpen ? statusAreaRef : null}
-                            >
+                            <div className="guest-actions">
                               <button
+                                ref={isStatusMenuOpen ? statusAreaRef : null}
                                 type="button"
                                 className={`${statusChipClass(
                                   rental.paymentStatus,
@@ -836,18 +832,11 @@ function RentalsPage() {
                                 aria-label="Change rental status"
                                 aria-expanded={isStatusMenuOpen}
                                 disabled={isBusy}
-                                onClick={(event) => {
+                                onClick={() => {
                                   if (isStatusMenuOpen) {
                                     setStatusMenuId("");
                                     return;
                                   }
-                                  const rect =
-                                    event.currentTarget.getBoundingClientRect();
-                                  setStatusMenuStyle({
-                                    position: "fixed",
-                                    top: rect.bottom + 8,
-                                    right: window.innerWidth - rect.right,
-                                  });
                                   setStatusMenuId(key);
                                 }}
                               >
@@ -859,7 +848,6 @@ function RentalsPage() {
                                     <div
                                       className="guest-menu guest-menu--popup"
                                       ref={statusMenuRef}
-                                      style={statusMenuStyle}
                                       role="dialog"
                                       aria-modal="true"
                                       aria-label="Change rental status"
@@ -885,28 +873,19 @@ function RentalsPage() {
                             </div>
                           </td>
                           <td>
-                            <div
-                              className="guest-actions"
-                              ref={isMenuOpen ? actionAreaRef : null}
-                            >
+                            <div className="guest-actions">
                               <button
+                                ref={isMenuOpen ? actionAreaRef : null}
                                 type="button"
                                 className="guest-menu-trigger"
                                 aria-label="Open rental actions"
                                 aria-expanded={isMenuOpen}
                                 disabled={isBusy}
-                                onClick={(event) => {
+                                onClick={() => {
                                   if (isMenuOpen) {
                                     setOpenMenuId("");
                                     return;
                                   }
-                                  const rect =
-                                    event.currentTarget.getBoundingClientRect();
-                                  setPopupMenuStyle({
-                                    position: "fixed",
-                                    top: rect.bottom + 8,
-                                    right: window.innerWidth - rect.right,
-                                  });
                                   setOpenMenuId(key);
                                 }}
                               >
@@ -921,7 +900,6 @@ function RentalsPage() {
                                     <div
                                       className="guest-menu guest-menu--popup"
                                       ref={popupMenuRef}
-                                      style={popupMenuStyle}
                                       role="dialog"
                                       aria-modal="true"
                                       aria-label="Rental actions"

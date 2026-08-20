@@ -12,7 +12,7 @@ Browser → React Router → Pages → Services (fetch + JWT) → Express API
 src/
   assets/         Static images
   components/     Shared UI (DashboardLayout, ProtectedRoute, LoginForm, HeroPanel)
-  lib/            Utilities (toast queue)
+  lib/            Utilities (toast queue, viewport-aware popup-menu hook)
   pages/          Route-level pages (LoginPage, DashboardPage, RentalsPage, …)
   services/       API client functions (auth.js, guests.js, rentals.js)
   App.jsx         Route definitions
@@ -36,7 +36,7 @@ Used by both `DashboardPage` (guests) and `RentalsPage`. Each implements:
 - **Effects**: a `useEffect` keyed on `[page, filters]` that fetches with an `active` flag for cleanup.
 - **Memorized filtering**: `useMemo` for search-filtered rows.
 - **Table**: sticky-header `<table>` inside a scrollable `.guest-table-wrap`.
-- **Row actions**: a 3-dot `guest-menu-trigger` opening a portal-based popup menu (`guest-menu`) positioned near the button, with an outside-click handler.
+- **Row actions**: a 3-dot `guest-menu-trigger` opening a portal-based popup menu (`guest-menu`) kept inside the viewport via `useMenuInViewport` (`src/lib/popupMenu.js`), with an outside-click handler.
 - **Modals**: `confirm-overlay` + `confirm-dialog` for confirm; `create-dialog` for create/edit forms.
 - **Toasts**: `toast.success/danger/info` from `src/lib/toast.js` (custom HeroUI queue).
 

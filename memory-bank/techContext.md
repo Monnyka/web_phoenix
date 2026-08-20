@@ -81,9 +81,11 @@ Base: `https://api-dev-phoenix.monnykapin.com/api/v1`
 ## Constraints / Gotchas
 - **API rate limit: 100 requests / 15 min.** When exceeded, returns `429` WITHOUT CORS headers → browser shows `Failed to fetch`. This is a backend behavior, not fixable in frontend (but caught and re-messaged).
 - `roomId`/`tenantId`/`createdBy` may be **populated objects** or `null` — render via `formatReference()`.
+- The rentals filter bar is a **responsive flex container** (`.rental-filters`): `display: flex; flex-wrap: wrap` with stretching items (`flex: 1 1 190px; min-width: 0`), so Search/Status/Month/Clear Filter wrap into 1–4 rows/columns to fit any width — no horizontal scroll.
 - **No error boundary** → render crashes produce a blank white page.
 - Local dev: `/env.js` 404 is harmless.
 
 ## Tool Usage Patterns
 - All app code is plain JSX (no TypeScript).
 - Styling is via global CSS classes in `src/App.css` + `src/index.css` (Tailwind v4 import). Components use custom class names, not Tailwind utility classes inline.
+- **Popup menus** (row actions, status chip, dashboard actions) are positioned by the shared `useMenuInViewport` hook (`src/lib/popupMenu.js`). The popup is **anchored to the trigger button** (refs on the buttons, not the wrapping div), right-edge aligned to the button like a native dropdown, flips **above** when the button is in the lower half of the screen, and is clamped inside the viewport. The menu is set `position: fixed` *before* measuring so its shrink-to-fit width is measured correctly (avoids the full-body-width measurement bug for portal-rendered elements).

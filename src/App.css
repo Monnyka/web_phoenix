@@ -364,7 +364,16 @@
 }
 
 .rental-filters {
-  grid-template-columns: minmax(240px, 1fr) 180px 180px auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rental-filters > * {
+  flex: 1 1 190px;
+  min-width: 0;
 }
 
 .rental-header-actions {
@@ -731,13 +740,14 @@
 .clear-filter-btn {
   border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: 12px;
-  padding: 10px 14px;
+  padding: 12px 14px; /* match .guest-search input padding so heights match */
   font: inherit;
   font-weight: 700;
   color: #0f172a;
   background: #ffffff;
   cursor: pointer;
   white-space: nowrap;
+  align-self: flex-end; /* keep natural height, align bottom with the inputs */
 }
 
 .clear-filter-btn:hover {
