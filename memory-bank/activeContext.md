@@ -43,6 +43,10 @@ Building out the **Rental Rooms** management page (`/dashboard/rentals`). This i
 
 11. **Rental filter bar is a responsive flex container** — `.rental-filters` uses `display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch` with stretching items (`.rental-filters > * { flex: 1 1 190px; min-width: 0 }`). It **auto-wraps** to fit any screen width with no horizontal scroll: 4 items on one row on desktop, 3+1 / 2+2 on tablets, single column on phones. (Replaced the rigid `minmax(240px, 1fr) 180px 180px auto` grid that overflowed ~900–1100px viewports.) The Clear Filter button uses `align-self: flex-end` + `padding: 12px 14px` (matching the inputs) so its height equals the search/status/month input heights instead of stretching with the row.
 
+12. **Room number input is numeric-only** — the "Number" field in the Add Room modal strips non-digit characters on input (`event.target.value.replace(/\D/g, "")`) and uses `inputMode="numeric"` for a numeric mobile keyboard.
+
+13. **Dev workflow notifies Watchtower** — added a "Notify Watchtower" step to `.github/workflows/docker-development.yml` (after Build and push): `if: success() && github.event_name != 'pull_request'`, curls `https://watchtower.monnykapin.com/v1/update?container=api-dev` with `secrets['WATCHTOWER_TOKEN']`.
+
 ## Key Decisions & Considerations
 - **Stats come from the list response** (embedded `stats` field), not a separate `/stats` call. This reduces requests (helpful given API rate limits).
 - **Month filter is server-side** via `?month=YYYY-MM` (matches the API). `<input type="month">` produces `YYYY-MM` natively.

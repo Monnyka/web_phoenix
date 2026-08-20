@@ -1216,11 +1216,12 @@ function RentalsPage() {
                 <span className="guest-search-label">Number</span>
                 <input
                   type="text"
+                  inputMode="numeric"
                   value={newRoomForm.number}
                   onChange={(event) =>
                     setNewRoomForm((currentForm) => ({
                       ...currentForm,
-                      number: event.target.value,
+                      number: event.target.value.replace(/\D/g, ""),
                     }))
                   }
                   placeholder="e.g. Room 2"
