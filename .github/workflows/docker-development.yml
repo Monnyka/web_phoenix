@@ -60,3 +60,10 @@ jobs:
             BASE_API_URL=https://api-dev-phoenix.monnykapin.com/api/v1
           cache-from: type=gha
           cache-to: type=gha,mode=max,ignore-error=true
+
+      - name: Notify Watchtower
+        if: success() && github.event_name != 'pull_request'
+        env:
+          WT_TOKEN: ${{ secrets['WATCHTOWER_TOKEN'] }}
+        run: |
+          curl -X POST -H "Authorization: Bearer $WT_TOKEN" "https://watchtower.monnykapin.com/v1/update?container=web-phoenix-dev"

@@ -5,7 +5,7 @@
 - **Dashboard shell**: Sidebar navigation (Monetary Contribution, Rental Rooms, Reservations, Reports, Settings), navbar with user + logout, footer.
 - **Monetary Contribution page** (`/dashboard`): list + pagination, search, status filter, create, update status, delete, toast/confirm. (Pre-existing; working.)
 - **Rental Rooms page** (`/dashboard/rentals`) — newly added:
-  - List with search, status filter (`?status=`), month filter (`?month=YYYY-MM`), pagination.
+  - List with search, status filter (`?status=`), month filter (`?month=YYYY-MM`), pagination. Filter bar is a responsive flex container (wrapping, stretching items, no horizontal scroll).
   - Stats strip (Total Rentals, Collected Rent, Expected Rent, Outstanding Rent, Paid, Pending, Overdue).
   - Create / Edit / Delete, Record Payment (`→ paid`), Refresh Status (real-time).
    - Manual status change: Status cell is a button → dropdown (Pending / Unpaid / Paid). `Pending`/`Unpaid` → `updateRentalStatus` (`PUT /rentals/:id/status`) with `{ status }`. **`Paid` → `recordRentalPayment` (`POST /rentals/:id/payments`) with `{ amount, paymentDate }`** — amount from `rentAmount`; `paymentDate` from the month filter (or current month) + dueDate day (or today).
@@ -13,6 +13,7 @@
 
   - Confirm dialogs and toast notifications.
   - Handles populated `roomId`/`tenantId` objects safely via `formatReference()`.
+  - Popup menus (row actions, status chip) stay on-screen via `useMenuInViewport` (`src/lib/popupMenu.js`): anchored to the trigger button, right-edge aligned, flip **above** when the button is too low, clamped to the viewport.
 - **Placeholder pages**: Reservations, Reports, Settings render a simple "content can be added here" card.
 - **Build**: `npm run build` passes (Vite/Rolldown). `npm run lint` runs (has pre-existing warnings, no undefined-variable errors).
 
@@ -31,7 +32,7 @@
 2. **Token expiry**: `ProtectedRoute` only checks token existence, not validity. Expired tokens pass routing but API calls return `401` → "Unable to load rentals list." Requires re-login.
 3. **`/env.js` 404 in dev**: harmless; app falls back to `import.meta.env.BASE_API_URL`.
 4. **`fetchRentalStats`** (the `GET /rentals/stats` service function) is exported but **unused** — the page uses the embedded `stats` from the list response. Could be removed or wired up if backend changes.
-5. **Pre-existing lint warnings**: `react-hooks/set-state-in-effect` in both `DashboardPage.jsx` and `RentalsPage.jsx` (the `setPopupMenuStyle({})` in the `openMenuId` effect) and an unused `user` variable in `DashboardPage.jsx`. Not new; consistent with existing patterns.
+5. **Pre-existing lint warnings**: only an unused `user` variable in `DashboardPage.jsx` remains. (The two `react-hooks/set-state-in-effect` errors were removed when the popup-menu positioning was refactored — see `useMenuInViewport` in `src/lib/popupMenu.js`.)
 
 ## Evolution of Decisions
 - Rental stats were moved from a dedicated `/stats` call to the **embedded `stats` field** in the list response (fewer requests, respects rate limit).

@@ -17,7 +17,7 @@ Building out the **Rental Rooms** management page (`/dashboard/rentals`). This i
 2. **Added `src/pages/RentalsPage.jsx`** — full CRUD management page:
    - Dashboard shell via `DashboardLayout`.
    - **Stats strip** rendered from `stats` embedded in the list response (Total Rentals, Collected Rent, Expected Rent, Outstanding Rent, Paid, Pending, Overdue). Amounts formatted as currency; counts as numbers.
-   - **Filters**: Search (client-side), Status (server-side `?status=`), Month (server-side `?month=YYYY-MM`).
+   - **Filters**: Search (client-side), Status (server-side `?status=`), Month (server-side `?month=YYYY-MM`). The filter bar auto-wraps (`repeat(auto-fit, minmax(min(190px, 100%), 1fr))`) so it never overflows on small screens.
    - **Table** columns: Room, Move In, Move Out, Rent, Due Date, Payment Date, Status, Actions. (Tenant column removed.)
    - **Row actions** (popup menu): Record Payment, Refresh Status, Edit, Delete.
    - **Create modal** (auto status), **Edit modal** (PUT recomputes status), and **Confirm dialogs**.
@@ -27,7 +27,7 @@ Building out the **Rental Rooms** management page (`/dashboard/rentals`). This i
 
 4. **Added sidebar menu item** "Rental Rooms" in `src/components/DashboardLayout.jsx`.
 
-5. **Added CSS** in `src/App.css`: status chip variants (`--paid/--pending/--overdue`), stats strip styles, `.guest-table--rentals` (wider min-width), `.rental-filters` (3-column filter grid).
+5. **Added CSS** in `src/App.css`: status chip variants (`--paid/--pending/--overdue`), stats strip styles, `.guest-table--rentals` (wider min-width), `.rental-filters` (responsive auto-wrapping flex filter bar).
 
 6. **Added manual status update** in the rental table: the **Status** column is now an interactive button that opens a portal popup with `Pending`, `Unpaid`, `Paid`. Selecting one calls `updateRental` (`PUT /rentals/:id`) with `{ status }` (not `paymentStatus`) and updates the row in place. Added `--unpaid` chip variant + `.status-chip-btn` styles.
 
@@ -38,6 +38,14 @@ Building out the **Rental Rooms** management page (`/dashboard/rentals`). This i
 8. **Table columns changed**: removed the **Tenant** column; added a **Payment Date** column (renders `rental.paymentDate`) between Due Date and Status.
 
 9. **Unpaid/Pending now use the dedicated status endpoint** — selecting `Unpaid` or `Pending` from the status-chip dropdown calls `updateRentalStatus` (`PUT /rentals/:id/status`) with `{ status: "unpaid" | "pending" }` (added to `src/services/rentals.js`), instead of `PUT /rentals/:id` with `{ status }`.
+
+10. **Popup menus now stay inside the viewport** — added `useMenuInViewport` (`src/lib/popupMenu.js`): a shared hook that measures each portal popup (row-action menu + status-chip menu, also the dashboard action menu) in a `useLayoutEffect` and positions it with `position: fixed`. It is **anchored to the trigger button itself** (the refs moved from the wrapping `.guest-actions` div to the buttons) so the popup's **right edge aligns with the button's right edge** like a native dropdown. Vertically it opens **below** but flips **above** when the button is in the lower half of the screen (or lacks room below). **Key bug fixed**: the menu is now taken out of document flow (`position: fixed`) *before* measuring, so its width is the shrink-to-fit content width — previously it measured the full body width (portal renders it statically), which clamped the popup to the far-left of the screen. Replaced the old click-time `top: rect.bottom + 8 / right: vw - rect.right` math. Removed `popupMenuStyle`/`statusMenuStyle` state entirely.
+
+11. **Rental filter bar is a responsive flex container** — `.rental-filters` uses `display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch` with stretching items (`.rental-filters > * { flex: 1 1 190px; min-width: 0 }`). It **auto-wraps** to fit any screen width with no horizontal scroll: 4 items on one row on desktop, 3+1 / 2+2 on tablets, single column on phones. (Replaced the rigid `minmax(240px, 1fr) 180px 180px auto` grid that overflowed ~900–1100px viewports.) The Clear Filter button uses `align-self: flex-end` + `padding: 12px 14px` (matching the inputs) so its height equals the search/status/month input heights instead of stretching with the row.
+
+12. **Room number input is numeric-only** — the "Number" field in the Add Room modal strips non-digit characters on input (`event.target.value.replace(/\D/g, "")`) and uses `inputMode="numeric"` for a numeric mobile keyboard.
+
+13. **Dev workflow notifies Watchtower** — added a "Notify Watchtower" step to `.github/workflows/docker-development.yml` (after Build and push): `if: success() && github.event_name != 'pull_request'`, curls `https://watchtower.monnykapin.com/v1/update?container=api-dev` with `secrets['WATCHTOWER_TOKEN']`.
 
 ## Key Decisions & Considerations
 - **Stats come from the list response** (embedded `stats` field), not a separate `/stats` call. This reduces requests (helpful given API rate limits).

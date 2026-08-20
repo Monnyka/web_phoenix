@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "../lib/toast";
+import { useMenuInViewport } from "../lib/popupMenu";
 import DashboardLayout from "../components/DashboardLayout";
 import { getAccessToken, getStoredUser } from "../services/auth";
 import {
@@ -14,7 +15,6 @@ function DashboardPage() {
   const pageSize = 25;
   const actionAreaRef = useRef(null);
   const popupMenuRef = useRef(null);
-  const [popupMenuStyle, setPopupMenuStyle] = useState({});
   const user = useMemo(() => getStoredUser(), []);
   const [guests, setGuests] = useState([]);
   const [loadingGuests, setLoadingGuests] = useState(true);
@@ -22,6 +22,7 @@ function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [openMenuId, setOpenMenuId] = useState("");
+  useMenuInViewport(popupMenuRef, actionAreaRef, Boolean(openMenuId));
   const [updatingGuestId, setUpdatingGuestId] = useState("");
   const [deletingGuestId, setDeletingGuestId] = useState("");
   const [confirmAction, setConfirmAction] = useState(null);
@@ -75,10 +76,7 @@ function DashboardPage() {
   }, [page]);
 
   useEffect(() => {
-    if (!openMenuId) {
-      setPopupMenuStyle({});
-      return undefined;
-    }
+    if (!openMenuId) return undefined;
 
     const handlePointerDown = (event) => {
       if (
@@ -369,11 +367,9 @@ function DashboardPage() {
                               : "-"}
                           </td>
                           <td>
-                            <div
-                              className="guest-actions"
-                              ref={isMenuOpen ? actionAreaRef : null}
-                            >
+                            <div className="guest-actions">
                               <button
+                                ref={isMenuOpen ? actionAreaRef : null}
                                 type="button"
                                 className="guest-menu-trigger"
                                 aria-label="Open guest actions"
@@ -382,18 +378,11 @@ function DashboardPage() {
                                   updatingGuestId === key ||
                                   deletingGuestId === key
                                 }
-                                onClick={(event) => {
+                                onClick={() => {
                                   if (isMenuOpen) {
                                     setOpenMenuId("");
                                     return;
                                   }
-                                  const rect =
-                                    event.currentTarget.getBoundingClientRect();
-                                  setPopupMenuStyle({
-                                    position: "fixed",
-                                    top: rect.bottom + 8,
-                                    right: window.innerWidth - rect.right,
-                                  });
                                   setOpenMenuId(key);
                                 }}
                               >
@@ -407,7 +396,6 @@ function DashboardPage() {
                                     <div
                                       className="guest-menu guest-menu--popup"
                                       ref={popupMenuRef}
-                                      style={popupMenuStyle}
                                       role="dialog"
                                       aria-modal="true"
                                       aria-label="Guest actions"
