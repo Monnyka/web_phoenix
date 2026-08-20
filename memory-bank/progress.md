@@ -8,6 +8,9 @@
   - List with search, status filter (`?status=`), month filter (`?month=YYYY-MM`), pagination.
   - Stats strip (Total Rentals, Collected Rent, Expected Rent, Outstanding Rent, Paid, Pending, Overdue).
   - Create / Edit / Delete, Record Payment (`→ paid`), Refresh Status (real-time).
+   - Manual status change: Status cell is a button → dropdown (Pending / Unpaid / Paid). `Pending`/`Unpaid` → `updateRentalStatus` (`PUT /rentals/:id/status`) with `{ status }`. **`Paid` → `recordRentalPayment` (`POST /rentals/:id/payments`) with `{ amount, paymentDate }`** — amount from `rentAmount`; `paymentDate` from the month filter (or current month) + dueDate day (or today).
+   - Table columns: Room, Move In, Move Out, Rent, Due Date, **Payment Date**, Status, Actions (Tenant column removed).
+
   - Confirm dialogs and toast notifications.
   - Handles populated `roomId`/`tenantId` objects safely via `formatReference()`.
 - **Placeholder pages**: Reservations, Reports, Settings render a simple "content can be added here" card.

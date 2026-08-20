@@ -54,7 +54,15 @@ Base: `https://api-dev-phoenix.monnykapin.com/api/v1`
 |----------|---------------|---------|
 | Auth | `POST /auth/login` | Login (email + password) |
 | Guests | `GET /guests`, `POST /guests`, `PATCH /guests/:id`, `DELETE /guests/:id` | Monetary contributions |
-| Rentals | `GET /rentals` (`?status=&month=&offset=&limit=`), `POST /rentals`, `GET /rentals/:id`, `GET /rentals/:id/status`, `PUT /rentals/:id`, `POST /rentals/:id/payments`, `GET /rentals/stats`, `DELETE /rentals/:id` | Rental room records |
+| Rentals | `GET /rentals` (`?status=&month=&offset=&limit=`), `POST /rentals`, `GET /rentals/:id`, `GET /rentals/:id/status`, `PUT /rentals/:id/status` (`{ status }`), `PUT /rentals/:id`, `POST /rentals/:id/payments`, `GET /rentals/stats`, `DELETE /rentals/:id` | Rental room records |
+
+### Rental status update body
+`PUT /rentals/:id/status` accepts `{ status }` (`"pending"`, `"unpaid"`, or `"paid"`). The status-chip dropdown calls this for **Pending**/**Unpaid**; **Paid** instead posts to `/rentals/:id/payments` (see below).
+
+### Payments endpoint body
+`POST /rentals/:id/payments` accepts `{ amount, paymentDate }` where:
+- `amount` = numeric rent amount (from `rentAmount`).
+- `paymentDate` = `YYYY-MM-DD`; year/month from the **month filter** (`?month=`) or the **current month** if none; day from the rental's **dueDate** (or today). Selecting "Paid" in the status-chip dropdown on the rentals page sends this body.
 
 ### Rental list response shape
 ```json

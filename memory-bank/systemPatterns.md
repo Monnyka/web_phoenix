@@ -55,9 +55,9 @@ Render conditional paragraphs: `Loading...`, `No records found.`, `No records ma
 ## Critical Implementation Paths
 1. **Login**: `LoginForm` → `loginRequest` (POST `/auth/login`) → `saveAuthSession` stores `accessToken`, `refreshToken`, `user` in localStorage.
 2. **Load rental list**: `RentalsPage` effect → `fetchRentals` (GET `/rentals?...status=&month=&offset=&limit=`) → set state → render.
-3. **Record payment**: row menu → confirm → `recordRentalPayment` (POST `/:id/payments`) → set row status to `paid`.
+3. **Record payment**: row menu → confirm → `recordRentalPayment` (POST `/:id/payments`) → set row status to `paid`. Also: selecting **Paid** in the status-chip dropdown → `recordRentalPayment` (POST `/:id/payments`) with `{ amount, paymentDate }` (month filter / current month + dueDate day) → row status `paid`.
 4. **Refresh status**: row menu → `fetchRentalStatus` (GET `/:id/status`) → update row `paymentStatus`.
-5. **Update**: edit modal → `updateRental` (PUT `/:id`) → replace row.
+5. **Manual status change**: status-chip dropdown → `Pending`/`Unpaid` use `updateRentalStatus` (`PUT /rentals/:id/status` with `{ status }`); `Paid` uses the payment endpoint (see #3).
 
 ## Important Note on Data Shapes
 `roomId`, `tenantId`, and potentially `createdBy` can be returned as **populated objects** (e.g. `{ _id, number }`) or `null`. Never render these directly as React children — always pass through `formatReference()` (renders `number || name || title || code || _id`).
