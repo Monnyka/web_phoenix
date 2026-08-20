@@ -18,7 +18,7 @@ Building out the **Rental Rooms** management page (`/dashboard/rentals`). This i
    - Dashboard shell via `DashboardLayout`.
    - **Stats strip** rendered from `stats` embedded in the list response (Total Rentals, Collected Rent, Expected Rent, Outstanding Rent, Paid, Pending, Overdue). Amounts formatted as currency; counts as numbers.
    - **Filters**: Search (client-side), Status (server-side `?status=`), Month (server-side `?month=YYYY-MM`).
-   - **Table** columns: Room, Tenant, Move In, Move Out, Rent, Due Date, Status, Actions.
+   - **Table** columns: Room, Move In, Move Out, Rent, Due Date, Payment Date, Status, Actions. (Tenant column removed.)
    - **Row actions** (popup menu): Record Payment, Refresh Status, Edit, Delete.
    - **Create modal** (auto status), **Edit modal** (PUT recomputes status), and **Confirm dialogs**.
    - **Pagination** driven by `total`.
@@ -28,6 +28,16 @@ Building out the **Rental Rooms** management page (`/dashboard/rentals`). This i
 4. **Added sidebar menu item** "Rental Rooms" in `src/components/DashboardLayout.jsx`.
 
 5. **Added CSS** in `src/App.css`: status chip variants (`--paid/--pending/--overdue`), stats strip styles, `.guest-table--rentals` (wider min-width), `.rental-filters` (3-column filter grid).
+
+6. **Added manual status update** in the rental table: the **Status** column is now an interactive button that opens a portal popup with `Pending`, `Unpaid`, `Paid`. Selecting one calls `updateRental` (`PUT /rentals/:id`) with `{ status }` (not `paymentStatus`) and updates the row in place. Added `--unpaid` chip variant + `.status-chip-btn` styles.
+
+7. **"Paid" from the status chip now records a real payment** — selecting `Paid` from the status-chip dropdown calls `recordRentalPayment` (`POST /rentals/:id/payments`) with `{ amount, paymentDate }` instead of `PUT /rentals/:id { status }`:
+   - `amount` = the rental's `rentAmount`.
+   - `paymentDate` = `YYYY-MM-DD` where `YYYY-MM` comes from the **month filter** (`?month=`) or the **current month** when no filter is set, and `DD` comes from the rental's **dueDate day** (falling back to today's day). Implemented via the `getPaymentDate(monthFilter, rental)` + `extractDayPart()` helpers. `Pending`/`Unpaid` use `updateRentalStatus` (see item 9).
+
+8. **Table columns changed**: removed the **Tenant** column; added a **Payment Date** column (renders `rental.paymentDate`) between Due Date and Status.
+
+9. **Unpaid/Pending now use the dedicated status endpoint** — selecting `Unpaid` or `Pending` from the status-chip dropdown calls `updateRentalStatus` (`PUT /rentals/:id/status`) with `{ status: "unpaid" | "pending" }` (added to `src/services/rentals.js`), instead of `PUT /rentals/:id` with `{ status }`.
 
 ## Key Decisions & Considerations
 - **Stats come from the list response** (embedded `stats` field), not a separate `/stats` call. This reduces requests (helpful given API rate limits).
